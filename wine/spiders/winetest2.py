@@ -11,7 +11,7 @@ class Winetest2Spider(scrapy.Spider):
     name = 'winetest2'
     allowed_domains = ['www.wine-world.com']
     start_urls = [
-        'https://www.wine-world.com/winery/domaine-la-soumade/09FDBF24-A1DB-4A46-8CE7-7B857C068A58'
+        'https://www.wine-world.com/wineinfo/b88abb22-d2bd-4214-8b15-2ad9f05cbc11'
     ]
 
     def parse(self, response):
@@ -49,17 +49,19 @@ class Winetest2Spider(scrapy.Spider):
         item['name_en'] = name_en.strip()
 
         # 获取评分信息——————————————————————————————————————————————————————
-        urls = response.xpath(
-            '//ul[@class="vintage-wrap"]/li/a/@href').getall()
+        urls = response.xpath('//ul[@class="vintage-wrap"]/li/a')
         for i in urls:
-            if i != "NV":
-                url = "https://www.wine-world.com" + i
+            year = i.xpath('./text()').get()
+            link = i.xpath('./@href').get()
+            if year != "NV":
+                url = "https://www.wine-world.com/" + link
                 yield scrapy.Request(url=url,
                                      callback=self.parse_winerate,
                                      meta={"item": item})
 
     def parse_winerate(self, response):
         item = response.meta["item"]
+        list1 = []
         # 评分信息 -------------------------------------------
         ev_url = response.xpath(
             '//div[@class="wine-evalue"]/div[@class="evalue-list"]')
@@ -78,5 +80,6 @@ class Winetest2Spider(scrapy.Spider):
                 xx.append(rate)
                 item[wine_year] = xx
 
-        yield item
-        # TODO：每次循环完成都会扔一个数据到 pipline ，需要在PIPLINE中处理？只保留最后一个过来的item
+        # print('++' * 50)
+        # print(item)
+        # print('==' * 50)

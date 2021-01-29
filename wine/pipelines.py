@@ -49,11 +49,7 @@ class WinePipeline:
 
         self.table.insert(dict(item))  # 直接将item写入数据库
 
-        # 第二种写法
-
-        # if spider.name == "winetest2":
-        #     self.table = self.db["wine"]  #创建表
-        # elif spider.name == "winery3":
-        #     self.table = self.db["winery"]
-
         return item
+
+    # def clean(slef,item):
+    #     xx =  item
