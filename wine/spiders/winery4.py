@@ -1,4 +1,8 @@
+# -------------------------------------------------------
 # 手工爬取
+# 从最低一个级别的产区开始爬取酒庄信息
+# 将连接黏贴到 start_urls 中开始运行爬取
+# -------------------------------------------------------
 from collections import namedtuple
 import scrapy
 import re
@@ -16,11 +20,12 @@ class Winery4Spider(scrapy.Spider):
 
     def parse(self, response):
         item = {}
+        # 翻页过来后，首先判断酒庄列表是否为空
         # 判断酒庄列表不为空才进行后续操作
         li = response.xpath('//ul[@class="listItem"]/li[1]/a/@href').get()
         if li is not None:
             # 从页面 获取层级信息 写入item
-            # 国家
+            # 国家-------------------------------------------------------
             item['nation'] = response.xpath(
                 '//*[@id="ulChain"]/li[2]/a/span/text()').get()
             nation_cn = response.xpath(
@@ -28,7 +33,7 @@ class Winery4Spider(scrapy.Spider):
             nation_cn = nation_cn.strip()
             item['nation_cn'] = nation_cn.replace("酒庄", "")
 
-            # 总产区
+            # 总产区-------------------------------------------------------
             item['main_region'] = response.xpath(
                 '//*[@id="ulChain"]/li[3]/a/span/text()').get()
             main_region_cn = response.xpath(
@@ -39,7 +44,7 @@ class Winery4Spider(scrapy.Spider):
             else:
                 item['main_region_cn'] = ""
 
-            # 大产区
+            # 大产区-------------------------------------------------------
             item['big_region'] = response.xpath(
                 '//*[@id="ulChain"]/li[4]/a/span/text()').get()
             big_region_cn = response.xpath(
@@ -49,7 +54,8 @@ class Winery4Spider(scrapy.Spider):
                 item['big_region_cn'] = big_region_cn.replace("酒庄", "")
             else:
                 item['big_region_cn'] = ""
-            # 小产区
+
+            # 小产区-------------------------------------------------------
             item['small_region'] = response.xpath(
                 '//*[@id="ulChain"]/li[5]/a/span/text()').get()
             small_region_cn = response.xpath(
@@ -60,7 +66,7 @@ class Winery4Spider(scrapy.Spider):
             else:
                 item['small_region_cn'] = ""
 
-            # 子产区
+            # 子产区-------------------------------------------------------
             sub_region = response.xpath(
                 '//*[@id="leftContainer"]/div[2]/div/div[1]/span/text()').get(
                 )
@@ -71,6 +77,7 @@ class Winery4Spider(scrapy.Spider):
             r = "".join(r)
             r = r.strip()
             item['sub_region_cn'] = r.replace("产区酒庄", "")
+
             # 从酒庄列表中获取每个酒庄的链接并发行给下个函数处理
             urls = response.xpath(
                 '//ul[@class="listItem"]/li/a/@href').getall()
@@ -79,7 +86,7 @@ class Winery4Spider(scrapy.Spider):
                                      callback=self.parse_winery,
                                      meta={"item": deepcopy(item)})
 
-        # 下一页
+        # 翻页-------------------------------------------------------
         url = response.xpath('//div[@class="pages"]/a/@href').get()
         if url is not None:
             url = url.rstrip("2")
@@ -109,6 +116,7 @@ class Winery4Spider(scrapy.Spider):
                                                   "").replace("  ", "")
         item['description'] = des
 
+        # 页面中找到酒庄资料页面链接传递个下个函数处理
         url = response.xpath(
             '//div[@class="winery-menu"]/ul/li[2]/a/@href').get()
         yield scrapy.Request(url=url,
